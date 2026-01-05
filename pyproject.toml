@@ -28,8 +28,6 @@ dependencies = [
   "plyfile>=0.7",
   "opencv-python>=4.9",
   "pillow>=10.2",
-  "diff-surfel-rasterization @ git+https://github.com/hbb1/diff-surfel-rasterization.git",
-  "simple-knn @ git+https://gitlab.inria.fr/bkerbl/simple-knn.git",
 ]
 
 [project.urls]
@@ -46,7 +44,3 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-
-[tool.uv.sources]
-diff-surfel-rasterization = { path = "submodules/diff-surfel-rasterization", editable=true }
-simple-knn = { path = "submodules/simple-knn", editable=true }
