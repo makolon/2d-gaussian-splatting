@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "2dgs"
+name = "twodgs"
 version = "0.1.0"
 description = "Reference implementation of 2D Gaussian Splatting."
 readme = "README.md"
