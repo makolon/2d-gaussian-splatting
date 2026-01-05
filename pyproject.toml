@@ -46,3 +46,7 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.uv.sources]
+diff-surfel-rasterization = { path = "submodules/diff-surfel-rasterization", editable=true}
+simple-knn = { path = "submodules/simple-knn", editable=true}
