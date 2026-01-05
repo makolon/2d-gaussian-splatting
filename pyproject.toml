@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "2dgs"
+version = "0.1.0"
+description = "Reference implementation of 2D Gaussian Splatting."
+readme = "README.md"
+license = { file = "LICENSE.md" }
+requires-python = ">=3.8"
+authors = [
+  { name = "GRAPHDECO research group" }
+]
+keywords = ["graphics", "gaussian splatting", "neural rendering"]
+dependencies = [
+  "numpy>=1.24",
+  "torch>=2.0",
+  "torchvision>=0.15",
+  "torchaudio>=2.0",
+  "typing_extensions>=4.9",
+  "mediapy==1.1.2",
+  "open3d==0.18.0",
+  "lpips==0.1.4",
+  "scikit-image==0.21.0",
+  "tqdm>=4.66",
+  "trimesh==4.3.2",
+  "plyfile>=0.7",
+  "opencv-python>=4.9",
+  "pillow>=10.2",
+  "diff-surfel-rasterization @ git+https://github.com/hbb1/diff-surfel-rasterization.git",
+  "simple-knn @ git+https://gitlab.inria.fr/bkerbl/simple-knn.git",
+]
+
+[project.urls]
+Homepage = "https://github.com/makolon/2d-gaussian-splatting"
+
+[project.scripts]
+2dgs-train = "twodgs.scripts.train:main"
+2dgs-render = "twodgs.scripts.render:main"
+2dgs-view = "twodgs.scripts.view:main"
+2dgs-metrics = "twodgs.scripts.metrics:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
