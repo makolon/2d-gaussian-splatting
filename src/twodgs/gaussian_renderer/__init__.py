@@ -16,6 +16,7 @@ from twodgs.scene.gaussian_model import GaussianModel
 from twodgs.utils.sh_utils import eval_sh
 from twodgs.utils.point_utils import depth_to_normal
 
+
 def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, scaling_modifier = 1.0, override_color = None):
     """
     Render the scene. 
@@ -112,7 +113,6 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
             "visibility_filter" : radii > 0,
             "radii": radii,
     }
-
 
     # additional regularizations
     render_alpha = allmap[1:2]

@@ -12,6 +12,7 @@
 import os
 import random
 import json
+
 from twodgs.utils.system_utils import searchForMaxIteration
 from twodgs.scene.dataset_readers import sceneLoadTypeCallbacks
 from twodgs.scene.gaussian_model import GaussianModel

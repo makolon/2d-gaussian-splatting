@@ -13,8 +13,10 @@ from argparse import ArgumentParser, Namespace
 import sys
 import os
 
+
 class GroupParams:
     pass
+
 
 class ParamGroup:
     def __init__(self, parser: ArgumentParser, name : str, fill_none = False):
@@ -27,12 +29,12 @@ class ParamGroup:
             t = type(value)
             value = value if not fill_none else None 
             if shorthand:
-                if t == bool:
+                if t is bool:
                     group.add_argument("--" + key, ("-" + key[0:1]), default=value, action="store_true")
                 else:
                     group.add_argument("--" + key, ("-" + key[0:1]), default=value, type=t)
             else:
-                if t == bool:
+                if t is bool:
                     group.add_argument("--" + key, default=value, action="store_true")
                 else:
                     group.add_argument("--" + key, default=value, type=t)
@@ -43,6 +45,7 @@ class ParamGroup:
             if arg[0] in vars(self) or ("_" + arg[0]) in vars(self):
                 setattr(group, arg[0], arg[1])
         return group
+
 
 class ModelParams(ParamGroup): 
     def __init__(self, parser, sentinel=False):
@@ -62,6 +65,7 @@ class ModelParams(ParamGroup):
         g.source_path = os.path.abspath(g.source_path)
         return g
 
+
 class PipelineParams(ParamGroup):
     def __init__(self, parser):
         self.convert_SHs_python = False
@@ -69,6 +73,7 @@ class PipelineParams(ParamGroup):
         self.depth_ratio = 0.0
         self.debug = False
         super().__init__(parser, "Pipeline Parameters")
+
 
 class OptimizationParams(ParamGroup):
     def __init__(self, parser):
@@ -94,6 +99,7 @@ class OptimizationParams(ParamGroup):
         self.densify_grad_threshold = 0.0002
         super().__init__(parser, "Optimization Parameters")
 
+
 def get_combined_args(parser : ArgumentParser, argv = None):
     cmdlne_string = argv if argv is not None else sys.argv[1:]
     cfgfile_string = "Namespace()"
@@ -112,6 +118,6 @@ def get_combined_args(parser : ArgumentParser, argv = None):
 
     merged_dict = vars(args_cfgfile).copy()
     for k,v in vars(args_cmdline).items():
-        if v != None:
+        if v is not None:
             merged_dict[k] = v
     return Namespace(**merged_dict)

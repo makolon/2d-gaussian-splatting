@@ -24,6 +24,7 @@ addr = None
 
 listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+
 def init(wish_host, wish_port):
     global host, port, listener
     host = wish_host
@@ -31,6 +32,7 @@ def init(wish_host, wish_port):
     listener.bind((host, port))
     listener.listen()
     listener.settimeout(0)
+
 
 def send_json_data(conn, data):
     # Serialize the list of strings to JSON
@@ -42,17 +44,17 @@ def send_json_data(conn, data):
     # Send the actual serialized data
     conn.sendall(bytes_data)
 
+
 def try_connect(render_items):
     global conn, addr, listener
     try:
         conn, addr = listener.accept()
-        # print(f"\nConnected by {addr}")
         conn.settimeout(None)
         send_json_data(conn, render_items)
     except Exception as inst:
         pass
-        # raise inst
-            
+
+
 def read():
     global conn
     messageLength = conn.recv(4)
@@ -60,13 +62,15 @@ def read():
     message = conn.recv(messageLength)
     return json.loads(message.decode("utf-8"))
 
+
 def send(message_bytes, verify, metrics):
     global conn
-    if message_bytes != None:
+    if message_bytes is not None:
         conn.sendall(message_bytes)
     conn.sendall(len(verify).to_bytes(4, 'little'))
     conn.sendall(bytes(verify, 'ascii'))
     send_json_data(conn, metrics)
+
 
 def receive():
     message = read()
