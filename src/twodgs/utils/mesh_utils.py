@@ -244,7 +244,8 @@ class GaussianExtractor(object):
                 triangles=o3d.utility.Vector3iVector(np.asarray(tri_mesh.faces)),
             )
             if tri_mesh.vertex_normals is not None and len(tri_mesh.vertex_normals) == len(tri_mesh.vertices):
-                mesh_o3d.vertex_normals = o3d.utility.Vector3dVector(np.asarray(tri_mesh.vertex_normals))
+                # Open3D requires a writable array; Trimesh can return read-only views
+                mesh_o3d.vertex_normals = o3d.utility.Vector3dVector(np.asarray(tri_mesh.vertex_normals).copy())
             else:
                 mesh_o3d.compute_vertex_normals()
             return mesh_o3d
