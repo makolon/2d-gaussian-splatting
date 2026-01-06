@@ -9,25 +9,27 @@
 # For inquiries contact  huangbb@shanghaitech.edu.cn
 #
 
-import torch
-import numpy as np
+import copy
 import os
-import math
-from tqdm import tqdm
-from twodgs.utils.render_utils import save_img_f32, save_img_u8
 from functools import partial
+
+import numpy as np
+import torch
+from tqdm import tqdm
 import open3d as o3d
-import trimesh
+
+from twodgs.utils.mcube_utils import marching_cubes_with_contraction
+from twodgs.utils.render_utils import focus_point_fn, save_img_f32, save_img_u8
+
 
 def post_process_mesh(mesh, cluster_to_keep=1000):
     """
     Post-process a mesh to filter out floaters and disconnected parts
     """
-    import copy
     print("post processing the mesh to have {} clusterscluster_to_kep".format(cluster_to_keep))
     mesh_0 = copy.deepcopy(mesh)
-    with o3d.utility.VerbosityContextManager(o3d.utility.VerbosityLevel.Debug) as cm:
-            triangle_clusters, cluster_n_triangles, cluster_area = (mesh_0.cluster_connected_triangles())
+    with o3d.utility.VerbosityContextManager(o3d.utility.VerbosityLevel.Debug):
+        triangle_clusters, cluster_n_triangles, cluster_area = (mesh_0.cluster_connected_triangles())
 
     triangle_clusters = np.asarray(triangle_clusters)
     cluster_n_triangles = np.asarray(cluster_n_triangles)
@@ -41,6 +43,7 @@ def post_process_mesh(mesh, cluster_to_keep=1000):
     print("num vertices raw {}".format(len(mesh.vertices)))
     print("num vertices post {}".format(len(mesh_0.vertices)))
     return mesh_0
+
 
 def to_cam_open3d(viewpoint_stack):
     camera_traj = []
@@ -90,10 +93,7 @@ class GaussianExtractor(object):
     @torch.no_grad()
     def clean(self):
         self.depthmaps = []
-        # self.alphamaps = []
         self.rgbmaps = []
-        # self.normals = []
-        # self.depth_normals = []
         self.viewpoint_stack = []
 
     @torch.no_grad()
@@ -106,27 +106,17 @@ class GaussianExtractor(object):
         for i, viewpoint_cam in tqdm(enumerate(self.viewpoint_stack), desc="reconstruct radiance fields"):
             render_pkg = self.render(viewpoint_cam, self.gaussians)
             rgb = render_pkg['render']
-            alpha = render_pkg['rend_alpha']
-            normal = torch.nn.functional.normalize(render_pkg['rend_normal'], dim=0)
             depth = render_pkg['surf_depth']
-            depth_normal = render_pkg['surf_normal']
             self.rgbmaps.append(rgb.cpu())
             self.depthmaps.append(depth.cpu())
-            # self.alphamaps.append(alpha.cpu())
-            # self.normals.append(normal.cpu())
-            # self.depth_normals.append(depth_normal.cpu())
         
-        # self.rgbmaps = torch.stack(self.rgbmaps, dim=0)
-        # self.depthmaps = torch.stack(self.depthmaps, dim=0)
-        # self.alphamaps = torch.stack(self.alphamaps, dim=0)
-        # self.depth_normals = torch.stack(self.depth_normals, dim=0)
         self.estimate_bounding_sphere()
 
     def estimate_bounding_sphere(self):
         """
         Estimate the bounding sphere given camera pose
         """
-        from twodgs.utils.render_utils import transform_poses_pca, focus_point_fn
+        
         torch.cuda.empty_cache()
         c2ws = np.array([np.linalg.inv(np.asarray((cam.world_view_transform.T).cpu().numpy())) for cam in self.viewpoint_stack])
         poses = c2ws[:,:3,:] @ np.diag([1, -1, -1, 1])
@@ -247,6 +237,18 @@ class GaussianExtractor(object):
 
             return tsdfs
 
+        def trimesh_to_open3d(tri_mesh):
+            """Convert trimesh mesh to an Open3D TriangleMesh."""
+            mesh_o3d = o3d.geometry.TriangleMesh(
+                vertices=o3d.utility.Vector3dVector(np.asarray(tri_mesh.vertices)),
+                triangles=o3d.utility.Vector3iVector(np.asarray(tri_mesh.faces)),
+            )
+            if tri_mesh.vertex_normals is not None and len(tri_mesh.vertex_normals) == len(tri_mesh.vertices):
+                mesh_o3d.vertex_normals = o3d.utility.Vector3dVector(np.asarray(tri_mesh.vertex_normals))
+            else:
+                mesh_o3d.compute_vertex_normals()
+            return mesh_o3d
+
         normalize = lambda x: (x - self.center) / self.radius
         unnormalize = lambda x: (x * self.radius) + self.center
         inv_contraction = lambda x: unnormalize(uncontract(x))
@@ -256,7 +258,6 @@ class GaussianExtractor(object):
         print(f"Computing sdf gird resolution {N} x {N} x {N}")
         print(f"Define the voxel_size as {voxel_size}")
         sdf_function = lambda x: compute_unbounded_tsdf(x, inv_contraction, voxel_size)
-        from twodgs.utils.mcube_utils import marching_cubes_with_contraction
         R = contract(normalize(self.gaussians.get_xyz)).norm(dim=-1).cpu().numpy()
         R = np.quantile(R, q=0.95)
         R = min(R+0.01, 1.9)
@@ -272,7 +273,7 @@ class GaussianExtractor(object):
         
         # coloring the mesh
         torch.cuda.empty_cache()
-        mesh = mesh.as_open3d
+        mesh = trimesh_to_open3d(mesh)
         print("texturing mesh ... ")
         _, rgbs = compute_unbounded_tsdf(torch.tensor(np.asarray(mesh.vertices)).float().cuda(), inv_contraction=None, voxel_size=voxel_size, return_rgb=True)
         mesh.vertex_colors = o3d.utility.Vector3dVector(rgbs.cpu().numpy())
@@ -291,5 +292,3 @@ class GaussianExtractor(object):
             save_img_u8(gt.permute(1,2,0).cpu().numpy(), os.path.join(gts_path, '{0:05d}'.format(idx) + ".png"))
             save_img_u8(self.rgbmaps[idx].permute(1,2,0).cpu().numpy(), os.path.join(render_path, '{0:05d}'.format(idx) + ".png"))
             save_img_f32(self.depthmaps[idx][0].cpu().numpy(), os.path.join(vis_path, 'depth_{0:05d}'.format(idx) + ".tiff"))
-            # save_img_u8(self.normals[idx].permute(1,2,0).cpu().numpy() * 0.5 + 0.5, os.path.join(vis_path, 'normal_{0:05d}'.format(idx) + ".png"))
-            # save_img_u8(self.depth_normals[idx].permute(1,2,0).cpu().numpy() * 0.5 + 0.5, os.path.join(vis_path, 'depth_normal_{0:05d}'.format(idx) + ".png"))

@@ -1,10 +1,5 @@
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import numpy as np
-import os, cv2
-import matplotlib.pyplot as plt
-import math
+
 
 def depths_to_points(view, depthmap):
     c2w = (view.world_view_transform.T).inverse()
@@ -22,6 +17,7 @@ def depths_to_points(view, depthmap):
     rays_o = c2w[:3,3]
     points = depthmap.reshape(-1, 1) * rays_d + rays_o
     return points
+
 
 def depth_to_normal(view, depth):
     """

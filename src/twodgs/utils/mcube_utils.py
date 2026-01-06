@@ -14,6 +14,8 @@ import torch
 import trimesh
 from skimage import measure
 # modified from here https://github.com/autonomousvision/sdfstudio/blob/370902a10dbef08cb3fe4391bd3ed1e227b5c165/nerfstudio/utils/marching_cubes.py#L201
+
+
 def marching_cubes_with_contraction(
     sdf,
     resolution=512,

@@ -9,20 +9,22 @@
 # For inquiries contact  george.drettakis@inria.fr
 #
 
-import torch
-import numpy as np
-from twodgs.utils.general_utils import inverse_sigmoid, get_expon_lr_func, build_rotation
-from torch import nn
 import os
-from twodgs.utils.system_utils import mkdir_p
+
+import numpy as np
+import torch
 from plyfile import PlyData, PlyElement
-from twodgs.utils.sh_utils import RGB2SH
 from simple_knn._C import distCUDA2
+from torch import nn
+
+from twodgs.utils.general_utils import inverse_sigmoid, get_expon_lr_func, build_rotation
 from twodgs.utils.graphics_utils import BasicPointCloud
-from twodgs.utils.general_utils import strip_symmetric, build_scaling_rotation
+from twodgs.utils.general_utils import build_scaling_rotation
+from twodgs.utils.sh_utils import RGB2SH
+from twodgs.utils.system_utils import mkdir_p
+
 
 class GaussianModel:
-
     def setup_functions(self):
         def build_covariance_from_scaling_rotation(center, scaling, scaling_modifier, rotation):
             RS = build_scaling_rotation(torch.cat([scaling * scaling_modifier, torch.ones_like(scaling)], dim=-1), rotation).permute(0,2,1)
@@ -39,7 +41,6 @@ class GaussianModel:
         self.opacity_activation = torch.sigmoid
         self.inverse_opacity_activation = inverse_sigmoid
         self.rotation_activation = torch.nn.functional.normalize
-
 
     def __init__(self, sh_degree : int):
         self.active_sh_degree = 0

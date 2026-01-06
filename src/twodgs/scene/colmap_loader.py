@@ -9,9 +9,11 @@
 # For inquiries contact  george.drettakis@inria.fr
 #
 
-import numpy as np
 import collections
 import struct
+
+import numpy as np
+
 
 CameraModel = collections.namedtuple(
     "CameraModel", ["model_id", "model_name", "num_params"])
@@ -52,6 +54,7 @@ def qvec2rotmat(qvec):
          2 * qvec[2] * qvec[3] + 2 * qvec[0] * qvec[1],
          1 - 2 * qvec[1]**2 - 2 * qvec[2]**2]])
 
+
 def rotmat2qvec(R):
     Rxx, Ryx, Rzx, Rxy, Ryy, Rzy, Rxz, Ryz, Rzz = R.flat
     K = np.array([
@@ -65,9 +68,11 @@ def rotmat2qvec(R):
         qvec *= -1
     return qvec
 
+
 class Image(BaseImage):
     def qvec2rotmat(self):
         return qvec2rotmat(self.qvec)
+
 
 def read_next_bytes(fid, num_bytes, format_char_sequence, endian_character="<"):
     """Read and unpack the next bytes from a binary file.
@@ -79,6 +84,7 @@ def read_next_bytes(fid, num_bytes, format_char_sequence, endian_character="<"):
     """
     data = fid.read(num_bytes)
     return struct.unpack(endian_character + format_char_sequence, data)
+
 
 def read_points3D_text(path):
     """
@@ -122,6 +128,7 @@ def read_points3D_text(path):
 
     return xyzs, rgbs, errors
 
+
 def read_points3D_binary(path_to_model_file):
     """
     see: src/base/reconstruction.cc
@@ -143,15 +150,11 @@ def read_points3D_binary(path_to_model_file):
             xyz = np.array(binary_point_line_properties[1:4])
             rgb = np.array(binary_point_line_properties[4:7])
             error = np.array(binary_point_line_properties[7])
-            track_length = read_next_bytes(
-                fid, num_bytes=8, format_char_sequence="Q")[0]
-            track_elems = read_next_bytes(
-                fid, num_bytes=8*track_length,
-                format_char_sequence="ii"*track_length)
             xyzs[p_id] = xyz
             rgbs[p_id] = rgb
             errors[p_id] = error
     return xyzs, rgbs, errors
+
 
 def read_intrinsics_text(path):
     """
@@ -176,6 +179,7 @@ def read_intrinsics_text(path):
                                             width=width, height=height,
                                             params=params)
     return cameras
+
 
 def read_extrinsics_binary(path_to_model_file):
     """

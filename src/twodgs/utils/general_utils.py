@@ -9,14 +9,19 @@
 # For inquiries contact  george.drettakis@inria.fr
 #
 
-import torch
+import random
 import sys
 from datetime import datetime
+
 import numpy as np
-import random
+import matplotlib.pyplot as plt
+import torch
+
 
 def inverse_sigmoid(x):
+
     return torch.log(x/(1-x))
+
 
 def PILtoTorch(pil_image, resolution):
     resized_image_PIL = pil_image.resize(resolution)
@@ -25,6 +30,7 @@ def PILtoTorch(pil_image, resolution):
         return resized_image.permute(2, 0, 1)
     else:
         return resized_image.unsqueeze(dim=-1).permute(2, 0, 1)
+
 
 def get_expon_lr_func(
     lr_init, lr_final, lr_delay_steps=0, lr_delay_mult=1.0, max_steps=1000000
@@ -61,6 +67,7 @@ def get_expon_lr_func(
 
     return helper
 
+
 def strip_lowerdiag(L):
     uncertainty = torch.zeros((L.shape[0], 6), dtype=torch.float, device="cuda")
 
@@ -72,8 +79,10 @@ def strip_lowerdiag(L):
     uncertainty[:, 5] = L[:, 2, 2]
     return uncertainty
 
+
 def strip_symmetric(sym):
     return strip_lowerdiag(sym)
+
 
 def build_rotation(r):
     norm = torch.sqrt(r[:,0]*r[:,0] + r[:,1]*r[:,1] + r[:,2]*r[:,2] + r[:,3]*r[:,3])
@@ -98,6 +107,7 @@ def build_rotation(r):
     R[:, 2, 2] = 1 - 2 * (x*x + y*y)
     return R
 
+
 def build_scaling_rotation(s, r):
     L = torch.zeros((s.shape[0], 3, 3), dtype=torch.float, device="cuda")
     R = build_rotation(r)
@@ -108,6 +118,7 @@ def build_scaling_rotation(s, r):
 
     L = R @ L
     return L
+
 
 def safe_state(silent):
     old_f = sys.stdout
@@ -133,8 +144,6 @@ def safe_state(silent):
     torch.cuda.set_device(torch.device("cuda:0"))
 
 
-
-
 def create_rotation_matrix_from_direction_vector_batch(direction_vectors):
     # Normalize the batch of direction vectors
     direction_vectors = direction_vectors / torch.norm(direction_vectors, dim=-1, keepdim=True)
@@ -153,15 +162,8 @@ def create_rotation_matrix_from_direction_vector_batch(direction_vectors):
     rotation_matrices = torch.stack((v1, v2, direction_vectors), dim=-1)
     return rotation_matrices
 
-# from kornia.geometry import conversions
-# def normal_to_rotation(normals):
-#     rotations = create_rotation_matrix_from_direction_vector_batch(normals)
-#     rotations = conversions.rotation_matrix_to_quaternion(rotations,eps=1e-5, order=conversions.QuaternionCoeffOrder.WXYZ)
-#     return rotations
-
 
 def colormap(img, cmap='jet'):
-    import matplotlib.pyplot as plt
     W, H = img.shape[:2]
     dpi = 300
     fig, ax = plt.subplots(1, figsize=(H/dpi, W/dpi), dpi=dpi)

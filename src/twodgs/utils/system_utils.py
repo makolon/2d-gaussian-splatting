@@ -9,9 +9,10 @@
 # For inquiries contact  george.drettakis@inria.fr
 #
 
+import os
 from errno import EEXIST
 from os import makedirs, path
-import os
+
 
 def mkdir_p(folder_path):
     # Creates a directory. equivalent to using mkdir -p on the command line
@@ -22,6 +23,7 @@ def mkdir_p(folder_path):
             pass
         else:
             raise
+
 
 def searchForMaxIteration(folder):
     saved_iters = [int(fname.split("_")[-1]) for fname in os.listdir(folder)]

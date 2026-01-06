@@ -9,12 +9,14 @@
 # For inquiries contact  george.drettakis@inria.fr
 #
 
-from twodgs.scene.cameras import Camera
 import numpy as np
+
+from twodgs.scene.cameras import Camera
 from twodgs.utils.general_utils import PILtoTorch
 from twodgs.utils.graphics_utils import fov2focal
 
 WARNED = False
+
 
 def loadCam(args, id, cam_info, resolution_scale):
     orig_w, orig_h = cam_info.image.size
@@ -53,6 +55,7 @@ def loadCam(args, id, cam_info, resolution_scale):
                   image=gt_image, gt_alpha_mask=loaded_mask,
                   image_name=cam_info.image_name, uid=id, data_device=args.data_device)
 
+
 def cameraList_from_camInfos(cam_infos, resolution_scale, args):
     camera_list = []
 
@@ -60,6 +63,7 @@ def cameraList_from_camInfos(cam_infos, resolution_scale, args):
         camera_list.append(loadCam(args, id, c, resolution_scale))
 
     return camera_list
+
 
 def camera_to_JSON(id, camera : Camera):
     Rt = np.zeros((4, 4))
